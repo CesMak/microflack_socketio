@@ -6,4 +6,4 @@ if [ "$SERVICE_URL" != "" ]; then
 fi
 
 # run web server
-exec gunicorn -b 0.0.0.0:5000 -k eventlet --access-logfile - --error-logfile - app:app
+exec gunicorn -b 0.0.0.0:5000 -k eventlet --access-logfile - --log-level debug --error-logfile gunicorn_error.log app:app
