@@ -20,7 +20,16 @@ message_queue = 'redis://' + os.environ['REDIS'] if 'REDIS' in os.environ \
 # this is very important: to have no https socketio problems!!!!
 # see here: https://github.com/miguelgrinberg/microflack_admin/issues/6
 # see here: https://stackoverflow.com/questions/63113478/flask-socketio-issues-with-https-http-wss-unable-to-connect-in-heroku
-socketio = SocketIO(app, message_queue=message_queue, cors_allowed_origins=['http://idgaming.de', 'https://idgaming.de'])
+
+test_socketio = os.environ['HTTPS_SERVERNAME'] if 'HTTPS_SERVERNAME' in os.environ \
+    else None
+if test_socketio is not None and "NOT" in str(test_socketio):
+    socketio = SocketIO(app, message_queue=message_queue)
+else:
+    cors_allowed = ['http://'+str(os.environ["HTTPS_SERVERNAME"]), 'https://'+str(os.environ["HTTPS_SERVERNAME"])]
+    print("HTTPS IS USED: ")
+    print(cors_allowed)
+    socketio = SocketIO(app, message_queue=message_queue, cors_allowed_origins=cors_allowed)
 
 @socketio.on('ping_user')
 def on_ping_user(token):
