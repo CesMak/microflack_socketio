@@ -2,7 +2,7 @@ import logging
 import os
 
 from flask import Flask, session
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 
 import config
 from microflack_common import requests
@@ -31,6 +31,13 @@ else:
     print(cors_allowed)
     socketio = SocketIO(app, message_queue=message_queue, cors_allowed_origins=cors_allowed)
 
+@socketio.on('on_join_room')# , namespace='/chat'
+def on_join_room(roomid):
+    # session['name'] = form.name.data
+    print("inside join_room", roomid)
+    session['roomid'] = int(roomid)
+    join_room(int(roomid))
+
 @socketio.on('ping_user')
 def on_ping_user(token):
     """Clients must send this event periodically to keep the user online."""
@@ -46,6 +53,9 @@ def on_ping_user(token):
 @socketio.on('post_message')
 def on_post_message(data, token):
     """Clients send this event to when the user posts a message."""
+    #data={'source': 'kaslödfjasdf'}
+    data['roomid'] = session['roomid']
+    print(data, "add roomid here goes to messages service", token)
     rv = requests.post('/api/messages', json=data,
                        headers={'Authorization': 'Bearer ' + token},
                        raise_for_status=False)

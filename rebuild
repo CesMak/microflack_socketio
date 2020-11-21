@@ -16,7 +16,4 @@ cd $INSTALL_PATH/microflack_admin/bin
 
 sleep 5
 docker container ls
-
-sleep 5
-docker container ls
 #docker exec -it socketio_47d330258694 sh
