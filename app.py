@@ -1,7 +1,7 @@
 import logging
 import os
 
-from flask import Flask, session
+from flask import Flask, session, request
 from flask_socketio import SocketIO, emit, join_room
 
 import config
@@ -32,11 +32,16 @@ else:
     socketio = SocketIO(app, message_queue=message_queue, cors_allowed_origins=cors_allowed)
 
 @socketio.on('on_join_room')# , namespace='/chat'
-def on_join_room(roomid):
-    # session['name'] = form.name.data
-    print("inside join_room", roomid)
+def on_join_room(roomid, id, token):
+    if not isinstance(roomid, int):
+        roomid=0
     session['roomid'] = int(roomid)
     join_room(int(roomid))
+    data = {'sid': str(request.sid)}
+    if int(id)>0:
+        rv = requests.put('/api/users/'+str(id), json=data,
+                          headers={'Authorization': 'Bearer ' + token},
+                          raise_for_status=True)
 
 @socketio.on('ping_user')
 def on_ping_user(token):
@@ -52,10 +57,13 @@ def on_ping_user(token):
 
 @socketio.on('post_message')
 def on_post_message(data, token):
-    """Clients send this event to when the user posts a message."""
-    #data={'source': 'kaslödfjasdf'}
-    data['roomid'] = session['roomid']
-    print(data, "add roomid here goes to messages service", token)
+    """Clients send this event to when the user posts a message.
+       All messages here are broadcasted to all room members
+    """
+    try:
+        data['roomid'] = session['roomid']
+    except:
+        data['roomid'] = 0
     rv = requests.post('/api/messages', json=data,
                        headers={'Authorization': 'Bearer ' + token},
                        raise_for_status=False)
